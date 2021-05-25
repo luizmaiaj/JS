@@ -25,11 +25,17 @@ async function createWidget(weather, loc)
     df.dateFormat = "yyyy/MM/dd, HH:mm:ss"
 
     let docContent = fm.readString(docpath) + "\n" + df.string(histdate) + ", " + loc.latitude + ", " + loc.longitude
-
     fm.writeString(docpath, docContent)
 
-    const info = widget.addText(sWeather + "\n" + sLocation)
-    info.font = Font.mediumRoundedSystemFont(18)
+    df.dateFormat = "HH:mm:ss"
+
+    const wtInfo = widget.addText(sWeather + "\n" + sLocation)
+    wtInfo.font = Font.mediumRoundedSystemFont(18)
+
+    widget.addSpacer()
+
+    const wtDate = widget.addText(df.string(histdate))
+    wtDate.font = Font.mediumRoundedSystemFont(12)
 
     return widget
 }
