@@ -10,6 +10,8 @@ let gAqi = await loadAQI(gLoc)
 let widget = await createWidget(gAqi, gLoc)
 Script.setWidget(widget)
 
+Script.complete()
+
 async function createWidget(weather, loc)
 {
     let widget = new ListWidget()
@@ -17,17 +19,17 @@ async function createWidget(weather, loc)
     let sLocation = weather.country_code + " " + weather.city_name
 
     let fm = FileManager.iCloud()
-    let docpath = fm.documentsDirectory()
+    let docpath = fm.documentsDirectory() + "/locationhistory.txt"
     let histdate = new Date()
     let df = new DateFormatter()
     df.dateFormat = "yyyy/MM/dd, HH:mm:ss"
 
-    fm.writeString(docpath + "/locationhistory.txt", df.string(histdate) + ", " + loc.latitude + ", " + loc.longitude + "\n")
+    let docContent = fm.readString(docpath) + "\n" + df.string(histdate) + ", " + loc.latitude + ", " + loc.longitude
+
+    fm.writeString(docpath, docContent)
 
     const info = widget.addText(sWeather + "\n" + sLocation)
     info.font = Font.mediumRoundedSystemFont(18)
-
-    //console.log(cur)
 
     return widget
 }
@@ -60,5 +62,3 @@ async function loadCovid()
 
     return jreq
 }
-
-Script.complete()
