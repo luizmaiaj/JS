@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="device-width, initial-scale=1.0">
+    </head>
+    <body>
+        <script>
+            import * as r from Request
+            var url = "https://api.weatherbit.io/v2.0/current/airquality?lat=13.810061&lon=100.547316&key=9706b562b7964206946dceb916acc290"
+            //var r = new Request(url)
+        
+            let json = await r.loadJSON()
+        
+            console.log(json.items)
+        </script>
+    </body>
+</html>
