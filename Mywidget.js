@@ -31,7 +31,7 @@ async function createWidget(tNow, weather)
     widget.addSpacer()
 
     const wtDate = widget.addText(df.string(tNow))
-    wtDate.font = Font.mediumRoundedSystemFont(12)
+    wtDate.font = Font.lightRoundedSystemFont(12)
 
     return widget
 }
