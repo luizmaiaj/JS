@@ -2,28 +2,37 @@
 // These must be at the very top of the file. Do not edit.
 // icon-color: orange; icon-glyph: magic;
 
-let gAqi = await loadAQI()
+let gLoc = await Location.current()
+
+let gAqi = await loadAQI(gLoc)
 //let gCovid = await loadCovid()
 
-let widget = await createWidget(gAqi)
+let widget = await createWidget(gAqi, gLoc)
 Script.setWidget(widget)
 
-async function createWidget(weather)
+async function createWidget(weather, loc)
 {
     let widget = new ListWidget()
 
-    widget.addText("AQI: " + weather.aqi.toString() + "\nPM2.5: " + weather.pm25.toString() + "\nPM10: " + weather.pm10.toString())
+    let sWeather = "AQI: " + weather.data[0].aqi.toString() + "\nPM2.5: " + weather.data[0].pm25.toString() + "\nPM10: " + weather.data[0].pm10.toString()
+
+    let sLocation = weather.country_code + " " + weather.city_name
+
+    widget.addText(sWeather + "\n" + sLocation)
+
+    //console.log(cur)
 
     return widget
 }
 
-async function loadAQI()
+async function loadAQI(LCur)
 {
-    let url = "https://api.weatherbit.io/v2.0/current/airquality?lat=13.810061&lon=100.547316&key=9706b562b7964206946dceb916acc290"
+    let lat = LCur.latitude
+    let url = "https://api.weatherbit.io/v2.0/current/airquality?lat=" + LCur.latitude + "&lon=" + LCur.longitude + "&key=9706b562b7964206946dceb916acc290"
     let req = new Request(url)
     let jreq = await req.loadJSON()
 
-    return jreq.data[0]
+    return jreq
 }
 
 async function loadCovid()
