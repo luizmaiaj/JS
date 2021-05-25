@@ -13,15 +13,19 @@ Script.setWidget(widget)
 async function createWidget(weather, loc)
 {
     let widget = new ListWidget()
-    let sWeather = "AQI: " + weather.data[0].aqi.toString() + "\nPM2.5: " + weather.data[0].pm25.toString() + "\nPM10: " + weather.data[0].pm10.toString()
+    let sWeather = "AQI: " + Math.trunc(weather.data[0].aqi).toString() + "\nPM2.5: " + Math.trunc(weather.data[0].pm25).toString() + "\nPM10: " + Math.trunc(weather.data[0].pm10).toString()
     let sLocation = weather.country_code + " " + weather.city_name
 
     let fm = FileManager.iCloud()
     let docpath = fm.documentsDirectory()
-    //console.log(docpath + "/locationhistory.txt")
-    fm.writeString(docpath + "/locationhistory.txt", loc.latitude + "," + loc.longitude + "\n")
+    let histdate = new Date()
+    let df = new DateFormatter()
+    df.dateFormat = "yyyy/MM/dd, HH:mm:ss"
 
-    widget.addText(sWeather + "\n" + sLocation)
+    fm.writeString(docpath + "/locationhistory.txt", df.string(histdate) + ", " + loc.latitude + ", " + loc.longitude + "\n")
+
+    const info = widget.addText(sWeather + "\n" + sLocation)
+    info.font = Font.mediumRoundedSystemFont(18)
 
     //console.log(cur)
 
