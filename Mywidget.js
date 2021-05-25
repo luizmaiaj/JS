@@ -2,31 +2,27 @@
 // These must be at the very top of the file. Do not edit.
 // icon-color: orange; icon-glyph: magic;
 
+let gDate = new Date()
+
 let gLoc = await Location.current()
+
+storeLocation(gDate, gLoc)
 
 let gAqi = await loadAQI(gLoc)
 //let gCovid = await loadCovid()
 
-let widget = await createWidget(gAqi, gLoc)
+let widget = await createWidget(gDate, gAqi)
 Script.setWidget(widget)
 
 Script.complete()
 
-async function createWidget(weather, loc)
+async function createWidget(tNow, weather)
 {
     let widget = new ListWidget()
     let sWeather = "AQI: " + Math.trunc(weather.data[0].aqi).toString() + "\nPM2.5: " + Math.trunc(weather.data[0].pm25).toString() + "\nPM10: " + Math.trunc(weather.data[0].pm10).toString()
     let sLocation = weather.country_code + " " + weather.city_name
 
-    let fm = FileManager.iCloud()
-    let docpath = fm.documentsDirectory() + "/locationhistory.txt"
-    let histdate = new Date()
     let df = new DateFormatter()
-    df.dateFormat = "yyyy/MM/dd, HH:mm:ss"
-
-    let docContent = fm.readString(docpath) + "\n" + df.string(histdate) + ", " + loc.latitude + ", " + loc.longitude
-    fm.writeString(docpath, docContent)
-
     df.dateFormat = "HH:mm:ss"
 
     const wtInfo = widget.addText(sWeather + "\n" + sLocation)
@@ -34,10 +30,21 @@ async function createWidget(weather, loc)
 
     widget.addSpacer()
 
-    const wtDate = widget.addText(df.string(histdate))
+    const wtDate = widget.addText(df.string(tNow))
     wtDate.font = Font.mediumRoundedSystemFont(12)
 
     return widget
+}
+
+async function storeLocation(tNow, locNow)
+{
+    let fm = FileManager.iCloud()
+    let docpath = fm.documentsDirectory() + "/locationhistory.txt"
+    let df = new DateFormatter()
+    df.dateFormat = "yyyy/MM/dd, HH:mm:ss"
+
+    let docContent = fm.readString(docpath) + "\n" + df.string(tNow) + ", " + locNow.latitude + ", " + locNow.longitude
+    fm.writeString(docpath, docContent)
 }
 
 async function loadAQI(LCur)
