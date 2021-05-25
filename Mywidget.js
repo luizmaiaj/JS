@@ -3,17 +3,17 @@
 // icon-color: orange; icon-glyph: magic;
 
 let gAqi = await loadAQI()
-let gCovid = await loadCovid()
+//let gCovid = await loadCovid()
 
 let widget = await createWidget(gAqi)
 Script.setWidget(widget)
 
-async function createWidget(iAqi)
+async function createWidget(weather)
 {
     let widget = new ListWidget()
 
-    widget.addText(iAqi)
-    
+    widget.addText("AQI: " + weather.aqi.toString() + "\nPM2.5: " + weather.pm25.toString() + "\nPM10: " + weather.pm10.toString())
+
     return widget
 }
 
@@ -23,19 +23,20 @@ async function loadAQI()
     let req = new Request(url)
     let jreq = await req.loadJSON()
 
-    return jreq.data[0].aqi
+    return jreq.data[0]
 }
 
 async function loadCovid()
 {
-    let url = "https://covid-19-data.p.rapidapi.com/country/code?code=TH"
+    let url = "https://covid-19-data.p.rapidapi.com/country/code=th"
+//    let url = "https://coronavirus-smartable.p.rapidapi.com/stats/v1/TH/"
+
     let req = new Request(url)
 
-    req.headers({
-        "x-rapidapi-key": "16e2c1a827msh446d04107881719p157391jsn1e65b9bed8af",
-        "x-rapidapi-host": "coronavirus-smartable.p.rapidapi.com",
-        "useQueryString": true
-    });
+    req.headers = { "x-rapidapi-key": "16e2c1a827msh446d04107881719p157391jsn1e65b9bed8af",
+        "x-rapidapi-host": "coronavirus-smartable.p.rapidapi.com"}
+//    req.headers = { "x-rapidapi-key": "16e2c1a827msh446d04107881719p157391jsn1e65b9bed8af",
+//        "x-rapidapi-host": "coronavirus-smartable.p.rapidapi.com"}
 
     let jreq = await req.loadJSON()
 
