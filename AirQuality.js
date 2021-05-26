@@ -8,15 +8,34 @@ let gLoc = await Location.current()
 
 storeLocation(gDate, gLoc)
 
-let gAqi = await loadAQI(gLoc)
+var widget
+var bConnection = true
+var gAqi
+var gLocName
 
-let gLocName = await determineLocation(gLoc, gAqi)
+try
+{
+    gAqi = await loadAQI(gLoc)
 
-//let gCovid = await loadCovid()
+    gLocName = await determineLocation(gLoc, gAqi)
+}
+catch (error)
+{
+    bConnection = false
+}
 
-let widget = await createWidget(gDate, gAqi, gLocName)
+if(bConnection)
+{
+    widget = await createWidget(gDate, gAqi, gLocName)
+}
+else
+{
+    console.log("updated with storage")
+    widget = new ListWidget()
+    getLastUpdate(widget)
+}
+
 Script.setWidget(widget)
-
 Script.complete()
 
 async function createWidget(tNow, weather, locName)
@@ -61,7 +80,36 @@ async function createWidget(tNow, weather, locName)
         widget.backgroundColor = new Color("FF3DE0")
     }
 
+    storeLastUpdate(wtInfo, wtDate, widget.backgroundColor)
+
     return widget
+}
+
+function getLastUpdate(wg)
+{
+    let fm = FileManager.iCloud()
+    let docpath = fm.documentsDirectory() + "/aqlastupdate.txt"
+    fm.downloadFileFromiCloud(docpath)
+    let docContent = fm.readString(docpath)
+
+    var aContent = docContent.split("\n")
+
+    const wtIf = wg.addText(aContent[0] + "\n" + aContent[1] + "\n" + aContent[2] + "\n" + aContent[3])
+    wtIf.font = Font.mediumRoundedSystemFont(18)
+    wg.addSpacer()
+    const wtDt = widget.addText(aContent[4])
+    wtDt.font = Font.lightRoundedSystemFont(12)
+    widget.backgroundColor = new Color(aContent[5])
+}
+
+function storeLastUpdate(wtIf, wtDt, wtColor)
+{
+    let fm = FileManager.iCloud()
+    let docpath = fm.documentsDirectory() + "/aqlastupdate.txt"
+
+    let docContent = wtIf.text + "\n" + wtDt.text + "\n" + wtColor.hex
+
+    fm.writeString(docpath, docContent)
 }
 
 async function determineLocation(locNow, locAPI)
@@ -124,25 +172,6 @@ async function loadAQI(LCur)
     let url = "https://api.weatherbit.io/v2.0/current/airquality?lat=" + LCur.latitude + "&lon=" + LCur.longitude + "&key=9706b562b7964206946dceb916acc290"
     let req = new Request(url)
     let jreq = await req.loadJSON()
-
-    return jreq
-}
-
-async function loadCovid()
-{
-    let url = "https://covid-19-data.p.rapidapi.com/country/code=th"
-//    let url = "https://coronavirus-smartable.p.rapidapi.com/stats/v1/TH/"
-
-    let req = new Request(url)
-
-    req.headers = { "x-rapidapi-key": "16e2c1a827msh446d04107881719p157391jsn1e65b9bed8af",
-        "x-rapidapi-host": "coronavirus-smartable.p.rapidapi.com"}
-//    req.headers = { "x-rapidapi-key": "16e2c1a827msh446d04107881719p157391jsn1e65b9bed8af",
-//        "x-rapidapi-host": "coronavirus-smartable.p.rapidapi.com"}
-
-    let jreq = await req.loadJSON()
-
-    console.log(jreq)
 
     return jreq
 }
