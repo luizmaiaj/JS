@@ -36,6 +36,8 @@ catch (error)
 Script.setWidget(widget)
 Script.complete()
 
+if (config.runsInApp) widget.presentSmall()
+
 async function createWidget(tNow, weather, locName)
 {
     let widget = new ListWidget()

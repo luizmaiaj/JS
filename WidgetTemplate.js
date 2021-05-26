@@ -9,6 +9,8 @@ Script.setWidget(widget)
 
 Script.complete()
 
+if (config.runsInApp) widget.presentSmall()
+
 async function createWidget(tNow)
 {
     let widget = new ListWidget()
