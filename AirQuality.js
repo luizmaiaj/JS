@@ -9,7 +9,6 @@ let gLoc = await Location.current()
 storeLocation(gDate, gLoc)
 
 var widget
-var bConnection = true
 var gAqi
 var gLocName
 
@@ -18,19 +17,11 @@ try
     gAqi = await loadAQI(gLoc)
 
     gLocName = await determineLocation(gLoc, gAqi)
+
+    widget = await createWidget(gDate, gAqi, gLocName)
 }
 catch (error)
 {
-    bConnection = false
-}
-
-if(bConnection)
-{
-    widget = await createWidget(gDate, gAqi, gLocName)
-}
-else
-{
-    console.log("updated with storage")
     widget = new ListWidget()
     getLastUpdate(widget)
 }
@@ -154,15 +145,25 @@ function deg2rad(deg)
     return deg * (Math.PI/180)
 }
 
-async function storeLocation(tNow, locNow)
+async function storeLocation(tNow, locNow) // store current location on a file named after the date
 {
-    let fm = FileManager.iCloud()
-    let docpath = fm.documentsDirectory() + "/locationhistory.txt"
-    fm.downloadFileFromiCloud(docpath)
     let df = new DateFormatter()
-    df.dateFormat = "yyyy/MM/dd, HH:mm:ss"
+    let fm = FileManager.iCloud()
+    df.dateFormat = "yyyyMMdd"
 
-    let docContent = fm.readString(docpath) + "\n" + df.string(tNow) + ", " + locNow.latitude + ", " + locNow.longitude
+    let docpath = fm.documentsDirectory() + "/locationhistory_" + df.string(tNow) + ".txt"
+
+    var docContent
+
+    if(fm.fileExists(docpath))
+    {
+        fm.downloadFileFromiCloud(docpath)
+
+        docContent = fm.readString(docpath)
+    }
+
+    df.dateFormat = "yyyy/MM/dd, HH:mm:ss"
+    docContent = docContent + "\n" + df.string(tNow) + ", " + locNow.latitude + ", " + locNow.longitude
     fm.writeString(docpath, docContent)
 }
 
