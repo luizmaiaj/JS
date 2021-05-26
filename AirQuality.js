@@ -2,13 +2,18 @@
 // These must be at the very top of the file. Do not edit.
 // icon-color: orange; icon-glyph: magic;
 
-let gDate = new Date()
+const gDate = new Date()
+const gDf = new DateFormatter()
+gDf.dateFormat = "yyyy/MM/dd, HH:mm:ss"
+const gFm = FileManager.iCloud()
+const BASEPATH = gFm.documentsDirectory() + "/storage"
+
+ // do not update more often than every 15 minutes, except location
+var bUpdate = (gDate - gDf.date(getLastUpdateTime())) > (15 * 60000)
+console.log(bUpdate)
 
 let gLoc = await Location.current()
 
-const gDf = new DateFormatter()
-const gFm = FileManager.iCloud()
-const BASEPATH = gFm.documentsDirectory() + "/storage"
 if(!gFm.fileExists(BASEPATH))
 {
     gFm.createDirectory(BASEPATH)
@@ -21,13 +26,21 @@ var gAqi
 var gLocName
 const MAX = 999
 
-try
+if(bUpdate)
 {
-    gAqi = await loadAQI(gLoc)
-    gLocName = await determineLocation(gLoc, gAqi)
-    widget = await createWidget(gDate, gAqi, gLocName)
+    try
+    {
+        gAqi = await loadAQI(gLoc)
+        gLocName = await determineLocation(gLoc, gAqi)
+        widget = await createWidget(gDate, gAqi, gLocName)
+    }
+    catch (error)
+    {
+        bUpdate = false
+    }
 }
-catch (error)
+
+if(!bUpdate)
 {
     console.log("no connection")
 
@@ -83,6 +96,17 @@ async function createWidget(tNow, weather, locName)
     return widget
 }
 
+function getLastUpdateTime()
+{
+    let docpath = BASEPATH + "/aqlastupdate.txt"
+    gFm.downloadFileFromiCloud(docpath)
+    let docContent = gFm.readString(docpath)
+
+    var aContent = docContent.split("\n")
+
+    return aContent[6]
+}
+
 function getLastUpdate(wg)
 {
     let docpath = BASEPATH + "/aqlastupdate.txt"
@@ -104,6 +128,10 @@ function storeLastUpdate(wtIf, wtDt, wtColor)
     let docpath = BASEPATH + "/aqlastupdate.txt"
 
     let docContent = wtIf.text + "\n" + wtDt.text + "\n" + wtColor.hex
+
+    gDf.dateFormat = "yyyy/MM/dd, HH:mm:ss"
+
+    docContent = docContent + "\n" + gDf.string(gDate)
 
     gFm.writeString(docpath, docContent)
 }
