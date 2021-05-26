@@ -153,17 +153,20 @@ async function storeLocation(tNow, locNow) // store current location on a file n
 
     let docpath = fm.documentsDirectory() + "/locationhistory_" + df.string(tNow) + ".txt"
 
-    var docContent
+    df.dateFormat = "yyyy/MM/dd, HH:mm:ss"
+    let docContent = ""
+    let newContent = df.string(tNow) + ", " + locNow.latitude + ", " + locNow.longitude
 
     if(fm.fileExists(docpath))
     {
         fm.downloadFileFromiCloud(docpath)
-
-        docContent = fm.readString(docpath)
+        docContent = fm.readString(docpath) + "\n" + newContent
     }
-
-    df.dateFormat = "yyyy/MM/dd, HH:mm:ss"
-    docContent = docContent + "\n" + df.string(tNow) + ", " + locNow.latitude + ", " + locNow.longitude
+    else
+    {
+        docContent = newContent
+    }
+    
     fm.writeString(docpath, docContent)
 }
 
