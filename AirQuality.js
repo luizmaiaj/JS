@@ -33,6 +33,27 @@ async function createWidget(tNow, weather)
     const wtDate = widget.addText(df.string(tNow))
     wtDate.font = Font.lightRoundedSystemFont(12)
 
+    if(weather.data[0].aqi < 50)
+    {
+        widget.backgroundColor = new Color("FFA63D")
+    }
+    else if(weather.data[0].aqi < 100)
+    {
+        widget.backgroundColor = new Color("FFA63D")
+    }
+    else if(weather.data[0].aqi < 150)
+    {
+        widget.backgroundColor = new Color("FF3D3D")
+    }
+    else if(weather.data[0].aqi < 200)
+    {
+        widget.backgroundColor = new Color("CD3DFF")
+    }
+    else
+    {
+        widget.backgroundColor = new Color("FF3DE0")
+    }
+
     return widget
 }
 
