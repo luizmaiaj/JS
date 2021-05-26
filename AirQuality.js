@@ -6,18 +6,25 @@ let gDate = new Date()
 
 let gLoc = await Location.current()
 
+const gDf = new DateFormatter()
+const gFm = FileManager.iCloud()
+const BASEPATH = gFm.documentsDirectory() + "/storage"
+if(!gFm.fileExists(BASEPATH))
+{
+    gFm.createDirectory(BASEPATH)
+}
+
 storeLocation(gDate, gLoc)
 
 var widget
 var gAqi
 var gLocName
+const MAX = 999
 
 try
 {
     gAqi = await loadAQI(gLoc)
-
     gLocName = await determineLocation(gLoc, gAqi)
-
     widget = await createWidget(gDate, gAqi, gLocName)
 }
 catch (error)
@@ -78,10 +85,9 @@ async function createWidget(tNow, weather, locName)
 
 function getLastUpdate(wg)
 {
-    let fm = FileManager.iCloud()
-    let docpath = fm.documentsDirectory() + "/aqlastupdate.txt"
-    fm.downloadFileFromiCloud(docpath)
-    let docContent = fm.readString(docpath)
+    let docpath = BASEPATH + "/aqlastupdate.txt"
+    gFm.downloadFileFromiCloud(docpath)
+    let docContent = gFm.readString(docpath)
 
     var aContent = docContent.split("\n")
 
@@ -95,12 +101,11 @@ function getLastUpdate(wg)
 
 function storeLastUpdate(wtIf, wtDt, wtColor)
 {
-    let fm = FileManager.iCloud()
-    let docpath = fm.documentsDirectory() + "/aqlastupdate.txt"
+    let docpath = BASEPATH + "/aqlastupdate.txt"
 
     let docContent = wtIf.text + "\n" + wtDt.text + "\n" + wtColor.hex
 
-    fm.writeString(docpath, docContent)
+    gFm.writeString(docpath, docContent)
 }
 
 async function determineLocation(locNow, locAPI)
@@ -116,16 +121,19 @@ async function determineLocation(locNow, locAPI)
     return locAPI.country_code + " " + locAPI.city_name
 }
 
-function getDistanceToStoredLocation(locNow, pathToLocation)
+function getDistanceToStoredLocation(locNow, fileName)
 {
-    let fm = FileManager.iCloud()
-    let docpath = fm.documentsDirectory() + "/" + pathToLocation
-    fm.downloadFileFromiCloud(docpath)
-    let docContent = fm.readString(docpath)
+    let docpath = BASEPATH + "/" + fileName
+    gFm.downloadFileFromiCloud(docpath)
+    let docContent = gFm.readString(docpath)
 
-    var aContent = docContent.split(",")
+    if(docContent.length > 0)
+    {
+        var aContent = docContent.split(",")
+        return getDistance(aContent[0], aContent[1], locNow.latitude, locNow.longitude)
+    }
 
-    return getDistance(aContent[0], aContent[1], locNow.latitude, locNow.longitude)
+    return MAX
 }
 
 function getDistance(lat1, lon1, lat2, lon2)
@@ -147,27 +155,25 @@ function deg2rad(deg)
 
 async function storeLocation(tNow, locNow) // store current location on a file named after the date
 {
-    let df = new DateFormatter()
-    let fm = FileManager.iCloud()
-    df.dateFormat = "yyyyMMdd"
+    gDf.dateFormat = "yyyyMMdd"
 
-    let docpath = fm.documentsDirectory() + "/locationhistory_" + df.string(tNow) + ".txt"
+    let docpath = BASEPATH + "/locationhistory_" + gDf.string(tNow) + ".txt"
 
-    df.dateFormat = "yyyy/MM/dd, HH:mm:ss"
+    gDf.dateFormat = "yyyy/MM/dd, HH:mm:ss"
     let docContent = ""
-    let newContent = df.string(tNow) + ", " + locNow.latitude + ", " + locNow.longitude
+    let newContent = gDf.string(tNow) + ", " + locNow.latitude + ", " + locNow.longitude
 
-    if(fm.fileExists(docpath))
+    if(gFm.fileExists(docpath))
     {
-        fm.downloadFileFromiCloud(docpath)
-        docContent = fm.readString(docpath) + "\n" + newContent
+        gFm.downloadFileFromiCloud(docpath)
+        docContent = gFm.readString(docpath) + "\n" + newContent
     }
     else
     {
         docContent = newContent
     }
     
-    fm.writeString(docpath, docContent)
+    gFm.writeString(docpath, docContent)
 }
 
 async function loadAQI(LCur)
