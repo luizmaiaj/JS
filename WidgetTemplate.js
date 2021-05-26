@@ -7,9 +7,9 @@ let gDate = new Date()
 let widget = await createWidget(gDate)
 Script.setWidget(widget)
 
-Script.complete()
-
 if (config.runsInApp) widget.presentSmall()
+
+Script.complete()
 
 async function createWidget(tNow)
 {

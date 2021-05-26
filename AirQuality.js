@@ -34,9 +34,10 @@ catch (error)
 }
 
 Script.setWidget(widget)
-Script.complete()
 
 if (config.runsInApp) widget.presentSmall()
+
+Script.complete()
 
 async function createWidget(tNow, weather, locName)
 {
