@@ -29,6 +29,8 @@ try
 }
 catch (error)
 {
+    console.log("no connection")
+
     widget = new ListWidget()
     getLastUpdate(widget)
 }
@@ -57,23 +59,23 @@ async function createWidget(tNow, weather, locName)
 
     if(weather.data[0].aqi < 50) // healthy
     {
-        widget.backgroundColor = new Color("FFA63D")
+        widget.backgroundColor = new Color.green
     }
     else if(weather.data[0].aqi < 100) // moderate
     {
-        widget.backgroundColor = new Color("FFA63D")
+        widget.backgroundColor = new Color.yellow
     }
     else if(weather.data[0].aqi < 150) // unhealthy
     {
-        widget.backgroundColor = new Color("FF3D3D")
+        widget.backgroundColor = new Color.orange
     }
     else if(weather.data[0].aqi < 200) // very unhealthy
     {
-        widget.backgroundColor = new Color("CD3DFF")
+        widget.backgroundColor = new Color.red
     }
     else // hazardous
     {
-        widget.backgroundColor = new Color("FF3DE0")
+        widget.backgroundColor = new Color.black
     }
 
     storeLastUpdate(wtInfo, wtDate, widget.backgroundColor)
