@@ -55,29 +55,24 @@ async function createWidget(tNow, weather, locName)
     const wtDate = widget.addText(df.string(tNow))
     wtDate.font = Font.lightRoundedSystemFont(12)
 
-    if(weather.data[0].aqi < 50)
+    if(weather.data[0].aqi < 50) // healthy
     {
-        // healthy
         widget.backgroundColor = new Color("FFA63D")
     }
-    else if(weather.data[0].aqi < 100)
+    else if(weather.data[0].aqi < 100) // moderate
     {
-        // moderate
         widget.backgroundColor = new Color("FFA63D")
     }
-    else if(weather.data[0].aqi < 150)
+    else if(weather.data[0].aqi < 150) // unhealthy
     {
-        // unhealthy
         widget.backgroundColor = new Color("FF3D3D")
     }
-    else if(weather.data[0].aqi < 200)
+    else if(weather.data[0].aqi < 200) // very unhealthy
     {
-        // very unhealthy
         widget.backgroundColor = new Color("CD3DFF")
     }
-    else
+    else // hazardous
     {
-        // hazardous
         widget.backgroundColor = new Color("FF3DE0")
     }
 
