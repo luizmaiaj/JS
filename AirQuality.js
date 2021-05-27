@@ -14,7 +14,7 @@ if(!gFm.fileExists(BASEPATH))
 }
 
 // do not update more often than every X minutes
-var minSinceUpdate = Math.trunc((gNow - gDf.date(getLastUpdateTime())) / 60000)
+var minSinceUpdate = Math.trunc((gNow - getLastUpdateTime()) / 60000)
 var bUpdate = (minSinceUpdate > 20)
 
 console.log("minutes since last update: " + minSinceUpdate.toString())
@@ -31,7 +31,7 @@ if(bUpdate)
     try
     {
         gJson = await loadAQI(gLoc)
-        console.loc(gJson)
+        console.loc({gJson})
 
         var gLocName = await determineLocation(gLoc, gJson)
         gWeather = {aqi: Math.trunc(gJson.data[0].aqi), pm25: Math.trunc(gJson.data[0].pm25), pm10: Math.trunc(gJson.data[0].pm10), time: gNow, loc: {lat: gLoc.latitude, lon: gLoc.longitude, name: gLocName}}
@@ -113,7 +113,9 @@ function getLastUpdateTime()
 
     var aContent = docContent.split("\n")
 
-    return aContent[3]
+    gDf.dateFormat = "yyyy/MM/dd, HH:mm:ss"
+
+    return gDf.date(aContent[3])
 }
 
 function getLastUpdate()
@@ -213,7 +215,6 @@ async function storeLocation(tNow, locNow) // store current location on a file n
 
 async function loadAQI(LCur)
 {
-    let lat = LCur.latitude
     let url = "https://api.weatherbit.io/v2.0/current/airquality?lat=" + LCur.latitude + "&lon=" + LCur.longitude + "&key=9706b562b7964206946dceb916acc290"
     let req = new Request(url)
     let jreq = await req.loadJSON()
