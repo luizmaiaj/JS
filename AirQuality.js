@@ -2,51 +2,61 @@
 // These must be at the very top of the file. Do not edit.
 // icon-color: orange; icon-glyph: magic;
 
-const gDate = new Date()
+const gNow = new Date()
 const gDf = new DateFormatter()
 gDf.dateFormat = "yyyy/MM/dd, HH:mm:ss"
 const gFm = FileManager.iCloud()
 const BASEPATH = gFm.documentsDirectory() + "/storage"
-
- // do not update more often than every 15 minutes, except location
-var bUpdate = (gDate - gDf.date(getLastUpdateTime())) > (15 * 60000)
-console.log(bUpdate)
-
-let gLoc = await Location.current()
 
 if(!gFm.fileExists(BASEPATH))
 {
     gFm.createDirectory(BASEPATH)
 }
 
-storeLocation(gDate, gLoc)
+// do not update more often than every X minutes
+var minSinceUpdate = Math.trunc((gNow - gDf.date(getLastUpdateTime())) / 60000)
+var bUpdate = (minSinceUpdate > 20)
 
-var widget
-var gAqi
-var gLocName
+console.log("minutes since last update: " + minSinceUpdate.toString())
+
 const MAX = 999
+var gJson
+var gWeather
 
 if(bUpdate)
 {
+    gLoc = await Location.current()
+    storeLocation(gNow, gLoc)
+
     try
     {
-        gAqi = await loadAQI(gLoc)
-        gLocName = await determineLocation(gLoc, gAqi)
-        widget = await createWidget(gDate, gAqi, gLocName)
+        gJson = await loadAQI(gLoc)
+        console.loc(gJson)
+
+        var gLocName = await determineLocation(gLoc, gJson)
+        gWeather = {aqi: Math.trunc(gJson.data[0].aqi), pm25: Math.trunc(gJson.data[0].pm25), pm10: Math.trunc(gJson.data[0].pm10), time: gNow, loc: {lat: gLoc.latitude, lon: gLoc.longitude, name: gLocName}}
+
+        gDf.dateFormat = "yyyyMMdd_HHmmss"
+
+        let docpath = BASEPATH + "/lastresponse_" + gDf.string(gNow) + ".txt"
+        gFm.writeString(docpath, gJson)
+
+        storeLastUpdate(gWeather)
     }
     catch (error)
     {
+        console.log("failed to get info from API")
         bUpdate = false
     }
 }
 
 if(!bUpdate)
 {
-    console.log("no connection")
-
-    widget = new ListWidget()
-    getLastUpdate(widget)
+    gWeather = getLastUpdate()
 }
+
+var widget
+widget = await createWidget(gWeather)
 
 Script.setWidget(widget)
 
@@ -54,46 +64,45 @@ if (config.runsInApp) widget.presentSmall()
 
 Script.complete()
 
-async function createWidget(tNow, weather, locName)
+//{aqi: aContent[0], pm25: aContent[1], pm10: aContent[2], time: aContent[3], loc: {lat: aContent[4], lon: aContent[5], name: }}
+async function createWidget(weather)
 {
-    let widget = new ListWidget()
-    let sWeather = "AQI: " + Math.trunc(weather.data[0].aqi).toString() + "\nPM2.5: " + Math.trunc(weather.data[0].pm25).toString() + "\nPM10: " + Math.trunc(weather.data[0].pm10).toString()
+    console.log({gWeather})
 
-    let df = new DateFormatter()
-    df.dateFormat = "HH:mm:ss"
+    let wg = new ListWidget()
+    let sWeather = "AQI: " + weather.aqi.toString() + "\nPM2.5: " + weather.pm25.toString() + "\nPM10: " + weather.pm10.toString()
 
-    const wtInfo = widget.addText(sWeather + "\n" + locName)
+    const wtInfo = wg.addText(sWeather + "\n" + weather.loc.name)
     wtInfo.font = Font.mediumRoundedSystemFont(18)
 
-    widget.addSpacer()
+    wg.addSpacer()
 
-    const wtDate = widget.addText(df.string(tNow))
+    gDf.dateFormat = "HH:mm:ss"
+    const wtDate = wg.addText(gDf.string(weather.time))
     wtDate.font = Font.lightRoundedSystemFont(12)
 
-    if(weather.data[0].aqi < 50) // healthy
+    if(weather.aqi < 50) // healthy
     {
-        widget.backgroundColor = new Color.green
+        wg.backgroundColor = Color.green()
     }
-    else if(weather.data[0].aqi < 100) // moderate
+    else if(weather.aqi < 100) // moderate
     {
-        widget.backgroundColor = new Color.yellow
+        wg.backgroundColor = Color.yellow()
     }
-    else if(weather.data[0].aqi < 150) // unhealthy
+    else if(weather.aqi < 150) // unhealthy
     {
-        widget.backgroundColor = new Color.orange
+        wg.backgroundColor = Color.orange()
     }
-    else if(weather.data[0].aqi < 200) // very unhealthy
+    else if(weather.aqi < 200) // very unhealthy
     {
-        widget.backgroundColor = new Color.red
+        wg.backgroundColor = Color.red()
     }
     else // hazardous
     {
-        widget.backgroundColor = new Color.black
+        wg.backgroundColor = Color.black()
     }
 
-    storeLastUpdate(wtInfo, wtDate, widget.backgroundColor)
-
-    return widget
+    return wg
 }
 
 function getLastUpdateTime()
@@ -104,10 +113,10 @@ function getLastUpdateTime()
 
     var aContent = docContent.split("\n")
 
-    return aContent[6]
+    return aContent[3]
 }
 
-function getLastUpdate(wg)
+function getLastUpdate()
 {
     let docpath = BASEPATH + "/aqlastupdate.txt"
     gFm.downloadFileFromiCloud(docpath)
@@ -115,23 +124,21 @@ function getLastUpdate(wg)
 
     var aContent = docContent.split("\n")
 
-    const wtIf = wg.addText(aContent[0] + "\n" + aContent[1] + "\n" + aContent[2] + "\n" + aContent[3])
-    wtIf.font = Font.mediumRoundedSystemFont(18)
-    wg.addSpacer()
-    const wtDt = widget.addText(aContent[4])
-    wtDt.font = Font.lightRoundedSystemFont(12)
-    widget.backgroundColor = new Color(aContent[5])
+    gDf.dateFormat = "yyyy/MM/dd, HH:mm:ss"
+    var storedTime = gDf.date(aContent[3])
+
+    return {aqi: aContent[0], pm25: aContent[1], pm10: aContent[2], time: storedTime, loc: {lat: aContent[4], lon: aContent[5], name: aContent[6]}}
 }
 
-function storeLastUpdate(wtIf, wtDt, wtColor)
+//{aqi: aContent[0], pm25: aContent[1], pm10: aContent[2], time: aContent[3], loc: {lat: aContent[4], lon: aContent[5], name: }}
+function storeLastUpdate(weather)
 {
     let docpath = BASEPATH + "/aqlastupdate.txt"
 
-    let docContent = wtIf.text + "\n" + wtDt.text + "\n" + wtColor.hex
-
     gDf.dateFormat = "yyyy/MM/dd, HH:mm:ss"
 
-    docContent = docContent + "\n" + gDf.string(gDate)
+    let docContent = weather.aqi.toString() + "\n" + weather.pm25.toString() + "\n" + weather.pm10.toString()
+    docContent = docContent + "\n" + weather.loc.name + "\n" + gDf.string(weather.time) + "\n" + weather.loc.lat + "\n" + weather.loc.lon
 
     gFm.writeString(docpath, docContent)
 }
