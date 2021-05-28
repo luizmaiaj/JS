@@ -1,0 +1,35 @@
+{
+    "toLog": {
+        "timezone": "Asia/Bangkok",
+        "lat": 13.81,
+        "current": {
+            "dt": 1622186577,
+            "temp": 30.51,
+            "humidity": 77,
+            "sunrise": 1622155763,
+            "sunset": 1622202066,
+            "uvi": 9.24,
+            "wind_deg": 168,
+            "wind_gust": 3.52,
+            "feels_like": 38.33,
+            "clouds": 75,
+            "visibility": 8000,
+            "wind_speed": 3.63,
+            "pressure": 1006,
+            "dew_point": 26.02,
+            "weather": [
+                {
+                    "id": 501,
+                    "main": "Rain",
+                    "icon": "10d",
+                    "description": "moderate rain"
+                }
+            ],
+            "rain": {
+                "1h": 2.9
+            }
+        },
+        "lon": 100.5475,
+        "timezone_offset": 25200
+    }
+}

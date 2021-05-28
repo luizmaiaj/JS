@@ -1,6 +1,6 @@
 // Variables used by Scriptable.
 // These must be at the very top of the file. Do not edit.
-// icon-color: orange; icon-glyph: magic;
+// icon-color: deep-green; icon-glyph: leaf;
 
 // openweather api
 // API key: faca05867d84ee306effa2c224819d0e
@@ -8,17 +8,26 @@
 
 async function createWidget(tNow)
 {
-    let widget = new ListWidget()
+    let wg = new ListWidget()
 
-    await requestData()
+    const wd = await requestData(tNow)
+
+    widgetAddText(wg, wd.current.weather[0].main, 18)
+    widgetAddText(wg, "\nfeels " + wd.current.feels_like.toString() + "°", 12)
+    widgetAddText(wg, wd.current.temp.toString() + "°", 18)
+    widgetAddText(wg, wd.current.humidity.toString() + "%", 18)
+    widgetAddText(wg, "uvi " + wd.current.uvi.toString(), 14)
+    widgetAddText(wg, wd.timezone, 14)
+
+    wg.addSpacer()
 
     let df = new DateFormatter()
     df.dateFormat = "HH:mm:ss"
 
-    const wtDate = widget.addText(df.string(tNow))
-    wtDate.font = Font.lightRoundedSystemFont(12)
+    const tDate = wg.addText(df.string(tNow))
+    tDate.font = Font.lightRoundedSystemFont(12)
 
-    return widget
+    return wg
 }
 
 async function run()
@@ -36,22 +45,76 @@ async function run()
     Script.complete()   
 }
 
-async function requestData()
+async function requestData(tNow)
 {
-    loc = await Location.current()
+    var json = await JSON.parse(readCache("owlastupdate.txt"))
 
-    let url = "https://api.openweathermap.org/data/2.5/onecall?lat=" + loc.latitude + "&lon=" + loc.longitude + "&units=metric" + "&appid=faca05867d84ee306effa2c224819d0e"
-    let req = new Request(url)
-    let jreq = await req.loadJSON()
+    var minPassed = Math.trunc(((Date.now() / 1000) - json.current.dt) / 60)
+    console.log("minutes passed " + minPassed.toString())
 
-    log(jreq)
+    if(minPassed >= 15)
+    {
+        var req
+        loc = await Location.current()
+        let url = "https://api.openweathermap.org/data/2.5/onecall?lat=" + loc.latitude + "&lon=" + loc.longitude + "&exclude=minutely,hourly,daily" + "&units=metric" + "&appid=faca05867d84ee306effa2c224819d0e"
 
-    return jreq
+        try
+        {
+            req = new Request(url)        
+        }
+        catch (error)
+        {
+            log("Error requesting data: " + url)
+            writeCache(req, "owlasterror.txt")
+            return
+        }
+
+        json = await req.loadJSON()
+
+        writeCache(json, "owlastupdate.txt")
+    }
+
+    return json
 }
 
+function widgetAddText(wg, sText, iSize)
+{
+    let tInfo = wg.addText(sText)
+    tInfo.font = Font.mediumRoundedSystemFont(iSize)
+}
+
+function readCache(fileName)
+{
+    const fm = FileManager.iCloud()
+    const BASEPATH = fm.documentsDirectory() + "/storage"
+    let docpath = BASEPATH + "/" + fileName
+    
+    if(!fm.fileExists(BASEPATH) || !fm.fileExists(docpath))
+    {
+        console.log("File not found " + docpath)
+        return
+    }
+
+    //return JSON.parse(fm.readString(docpath))
+    return fm.readString(docpath)
+}
+
+function writeCache(wd, fileName)
+{
+    const fm = FileManager.iCloud()
+    const BASEPATH = fm.documentsDirectory() + "/storage"
+    
+    if(!fm.fileExists(BASEPATH)) fm.createDirectory(BASEPATH)
+
+    let docpath = BASEPATH + "/" + fileName
+
+    fm.writeString(docpath, JSON.stringify(wd))
+}
+
+// only logs if running inside the app
 function log(toLog)
 {
-    if (config.runsInApp) console.log({toLog})
+    if (config.runsInApp) console.log(toLog)
 }
 
 await run()
