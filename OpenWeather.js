@@ -64,8 +64,10 @@ async function requestData(tNow)
         }
         catch (error)
         {
+            json = await req.loadJSON()
+
             log("Error requesting data: " + url)
-            writeCache(req, "owlasterror.txt")
+            writeCache(json, "owlasterror.txt")
             return
         }
 
