@@ -66,7 +66,7 @@ async function requestData(tNow)
         {
             json = await req.loadJSON()
 
-            log("Error requesting data: " + url)
+            console.log("Error requesting data: " + url)
             writeCache(json, "owlasterror.txt")
             return
         }
@@ -111,12 +111,6 @@ function writeCache(wd, fileName)
     let docpath = BASEPATH + "/" + fileName
 
     fm.writeString(docpath, JSON.stringify(wd))
-}
-
-// only logs if running inside the app
-function log(toLog)
-{
-    if (config.runsInApp) console.log(toLog)
 }
 
 await run()
