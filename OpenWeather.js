@@ -16,11 +16,11 @@ async function createWidget(tNow)
     sPM10 = Math.round(wd.p.list[0].components.pm10).toString()
     sCO = Math.round(wd.p.list[0].components.co).toString()
     sSO2 = Math.round(wd.p.list[0].components.so2.toString()).toString()
+    sHum = wd.w.current.humidity.toString() + "%"
 
     widgetAddText(wg, wd.w.timezone, 12)
     widgetAddText(wg, wd.w.current.weather[0].main, 16)
-    widgetAddText(wg, sTemp + " (" + sFeel + ")", 16)
-    widgetAddText(wg, wd.w.current.humidity.toString() + "%", 16)
+    widgetAddText(wg, sTemp + " (" + sFeel + ")" + " " + sHum, 16)
     widgetAddText(wg, "uvi: " + sUVI + ", aqi: " + sAQI, 12)
     widgetAddText(wg, "pm25: " + sPM25 + ", pm10: " + sPM10, 12)
     widgetAddText(wg, "co: " + sCO + ", so2: " + sSO2, 12)
