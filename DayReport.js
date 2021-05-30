@@ -13,10 +13,11 @@ async function createWidget()
     const wtInfo = widget.addText(bat.toString() + "% " + (Device.isCharging()?"charging":"discharging"))
     wtInfo.font = Font.mediumRoundedSystemFont(18)
 
-    let fu = Device.isFaceUp()
-    let fd = Device.isFaceDown()
+//    functions below always return false independently of the phones orientation
+//    let fu = Device.isFaceUp()
+//    let fd = Device.isFaceDown()
 
-    widget.addText(fu.toString() + " " + fd.toString())
+//    widget.addText(fu.toString() + " " + fd.toString())
 
     widget.addSpacer()
 
@@ -50,10 +51,6 @@ async function run()
     Script.setWidget(widget)
     
     if (config.runsInApp) widget.presentSmall()
-
-    const tUpdate = new Timer()
-    tUpdate.timeInterval = 5000
-    tUpdate.schedule(createWidget())
 
     Script.complete()
 }

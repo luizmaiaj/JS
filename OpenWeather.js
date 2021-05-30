@@ -54,6 +54,9 @@ async function run()
 // Ex: api.openweathermap.org/data/2.5/weather?q=London,uk&APPID=faca05867d84ee306effa2c224819d0e
 //     api.openweathermap.org/data/2.5/air_pollution?lat={lat}&lon={lon}&appid=faca05867d84ee306effa2c224819d0e
 // AQI: Possible values: 1, 2, 3, 4, 5. Where 1 = Good, 2 = Fair, 3 = Moderate, 4 = Poor, 5 = Very Poor
+//     tile.openweathermap.org/map/{layer}/{z}/{x}/{y}.png?appid=faca05867d84ee306effa2c224819d0e
+//     layer: temp_new
+//     z: zoom
 async function requestData(tNow)
 {
     var jWeather = await JSON.parse(readCache("owlastupdate.txt"))
