@@ -8,13 +8,22 @@ async function createWidget(tNow)
 
     const wd = await requestData(tNow)
 
-    widgetAddText(wg, wd.w.current.weather[0].main, 16)
-    widgetAddText(wg, "feels " + wd.w.current.feels_like.toString() + "°", 12)
-    widgetAddText(wg, wd.w.current.temp.toString() + "°", 16)
-    widgetAddText(wg, wd.w.current.humidity.toString() + "%", 16)
-    widgetAddText(wg, "uvi " + wd.w.current.uvi.toString(), 12)
+    sTemp = Math.round(wd.w.current.temp).toString() + "°"
+    sFeel = Math.round(wd.w.current.feels_like).toString() + "°"
+    sUVI = Math.round(wd.w.current.uvi).toString()
+    sAQI = Math.round(wd.p.list[0].main.aqi).toString()
+    sPM25 = Math.round(wd.p.list[0].components.pm2_5).toString()
+    sPM10 = Math.round(wd.p.list[0].components.pm10).toString()
+    sCO = Math.round(wd.p.list[0].components.co).toString()
+    sSO2 = Math.round(wd.p.list[0].components.so2.toString()).toString()
+
     widgetAddText(wg, wd.w.timezone, 12)
-    widgetAddText(wg, "aqi " + wd.p.list[0].main.aqi, 16)
+    widgetAddText(wg, wd.w.current.weather[0].main, 16)
+    widgetAddText(wg, sTemp + " (" + sFeel + ")", 16)
+    widgetAddText(wg, wd.w.current.humidity.toString() + "%", 16)
+    widgetAddText(wg, "uvi " + sUVI + " aqi " + sAQI, 12)
+    widgetAddText(wg, "pm25 " + sPM25 + " pm10 " + sPM10, 12)
+    widgetAddText(wg, "co " + sCO + " so2 " + sSO2, 12)
 
     wg.addSpacer()
 
@@ -44,6 +53,7 @@ async function run()
 
 // Ex: api.openweathermap.org/data/2.5/weather?q=London,uk&APPID=faca05867d84ee306effa2c224819d0e
 //     api.openweathermap.org/data/2.5/air_pollution?lat={lat}&lon={lon}&appid=faca05867d84ee306effa2c224819d0e
+// AQI: Possible values: 1, 2, 3, 4, 5. Where 1 = Good, 2 = Fair, 3 = Moderate, 4 = Poor, 5 = Very Poor
 async function requestData(tNow)
 {
     var jWeather = await JSON.parse(readCache("owlastupdate.txt"))
