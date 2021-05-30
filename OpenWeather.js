@@ -21,9 +21,9 @@ async function createWidget(tNow)
     widgetAddText(wg, wd.w.current.weather[0].main, 16)
     widgetAddText(wg, sTemp + " (" + sFeel + ")", 16)
     widgetAddText(wg, wd.w.current.humidity.toString() + "%", 16)
-    widgetAddText(wg, "uvi " + sUVI + " aqi " + sAQI, 12)
-    widgetAddText(wg, "pm25 " + sPM25 + " pm10 " + sPM10, 12)
-    widgetAddText(wg, "co " + sCO + " so2 " + sSO2, 12)
+    widgetAddText(wg, "uvi: " + sUVI + ", aqi: " + sAQI, 12)
+    widgetAddText(wg, "pm25: " + sPM25 + ", pm10: " + sPM10, 12)
+    widgetAddText(wg, "co: " + sCO + ", so2: " + sSO2, 12)
 
     wg.addSpacer()
 
@@ -62,43 +62,51 @@ async function requestData(tNow)
     var minPassed = Math.trunc(((Date.now() / 1000) - jWeather.current.dt) / 60)
     console.log("minutes passed " + minPassed.toString())
 
-    if(minPassed >= 15) {
-        var req
-        loc = await Location.current()
+    var oldLoc = {latitude: jWeather.lat, longitude: jWeather.lon}
+
+    if(minPassed >= 5) {
+        var loc
+        try { // if location request fails use the last known location
+            loc = await Location.current()    
+        } catch (error) {
+            console.log("using last known location")
+            loc = oldLoc
+        }
+        
         let url = "https://api.openweathermap.org/data/2.5/onecall?lat=" + loc.latitude + "&lon=" + loc.longitude + "&exclude=minutely,hourly,daily" + "&units=metric" + "&appid=faca05867d84ee306effa2c224819d0e"
 
-        try {
-            req = new Request(url)        
-        } catch (error) {
-            jWeather = await req.loadJSON()
-
-            console.log("Error requesting data: " + url)
-            writeCache(jWeather, "owlasterror.txt")
-            return
-        }
-
-        jWeather = await req.loadJSON()
+        jWeather = await sendRequest(url)
 
         writeCache(jWeather, "owlastupdate.txt")
 
         url = "https://api.openweathermap.org/data/2.5/air_pollution?lat=" + loc.latitude + "&lon=" + loc.longitude + "&appid=faca05867d84ee306effa2c224819d0e"
 
-        try {
-            req = new Request(url)
-        } catch (error) {
-            jPolution = await req.loadJSON()
-
-            console.log("Error requesting data: " + url)
-            writeCache(jPolution, "oplasterror.txt")
-            return
-        }
-
-        jPolution = await req.loadJSON()
+        jPolution = await sendRequest(url)
 
         writeCache(jPolution, "oplastupdate.txt")
     }
 
     return {w: jWeather, p: jPolution}
+}
+
+async function sendRequest(url)
+{
+    var jInfo
+    var req
+
+    try {
+        req = new Request(url)        
+    } catch (error) {
+        jInfo = await req.loadJSON()
+
+        console.log("Error requesting data: " + url)
+        writeCache(jInfo, "lasterror.txt")
+        return
+    }
+
+    jInfo = await req.loadJSON()
+
+    return jInfo
 }
 
 function widgetAddText(wg, sText, iSize)
