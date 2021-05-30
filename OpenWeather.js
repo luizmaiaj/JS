@@ -2,22 +2,19 @@
 // These must be at the very top of the file. Do not edit.
 // icon-color: deep-green; icon-glyph: leaf;
 
-// openweather api
-// API key: faca05867d84ee306effa2c224819d0e
-// Example: api.openweathermap.org/data/2.5/weather?q=London,uk&APPID=faca05867d84ee306effa2c224819d0e
-
 async function createWidget(tNow)
 {
     let wg = new ListWidget()
 
     const wd = await requestData(tNow)
 
-    widgetAddText(wg, wd.current.weather[0].main, 18)
-    widgetAddText(wg, "\nfeels " + wd.current.feels_like.toString() + "°", 12)
-    widgetAddText(wg, wd.current.temp.toString() + "°", 18)
-    widgetAddText(wg, wd.current.humidity.toString() + "%", 18)
-    widgetAddText(wg, "uvi " + wd.current.uvi.toString(), 14)
-    widgetAddText(wg, wd.timezone, 14)
+    widgetAddText(wg, wd.w.current.weather[0].main, 16)
+    widgetAddText(wg, "feels " + wd.w.current.feels_like.toString() + "°", 12)
+    widgetAddText(wg, wd.w.current.temp.toString() + "°", 16)
+    widgetAddText(wg, wd.w.current.humidity.toString() + "%", 16)
+    widgetAddText(wg, "uvi " + wd.w.current.uvi.toString(), 12)
+    widgetAddText(wg, wd.w.timezone, 12)
+    widgetAddText(wg, "aqi " + wd.p.list[0].main.aqi, 16)
 
     wg.addSpacer()
 
@@ -25,7 +22,7 @@ async function createWidget(tNow)
     df.dateFormat = "HH:mm:ss"
 
     const tDate = wg.addText(df.string(tNow))
-    tDate.font = Font.lightRoundedSystemFont(12)
+    tDate.font = Font.lightRoundedSystemFont(10)
 
     return wg
 }
@@ -45,38 +42,53 @@ async function run()
     Script.complete()   
 }
 
+// Ex: api.openweathermap.org/data/2.5/weather?q=London,uk&APPID=faca05867d84ee306effa2c224819d0e
+//     api.openweathermap.org/data/2.5/air_pollution?lat={lat}&lon={lon}&appid=faca05867d84ee306effa2c224819d0e
 async function requestData(tNow)
 {
-    var json = await JSON.parse(readCache("owlastupdate.txt"))
+    var jWeather = await JSON.parse(readCache("owlastupdate.txt"))
+    var jPolution = await JSON.parse(readCache("oplastupdate.txt"))
 
-    var minPassed = Math.trunc(((Date.now() / 1000) - json.current.dt) / 60)
+    var minPassed = Math.trunc(((Date.now() / 1000) - jWeather.current.dt) / 60)
     console.log("minutes passed " + minPassed.toString())
 
-    if(minPassed >= 15)
-    {
+    if(minPassed >= 15) {
         var req
         loc = await Location.current()
         let url = "https://api.openweathermap.org/data/2.5/onecall?lat=" + loc.latitude + "&lon=" + loc.longitude + "&exclude=minutely,hourly,daily" + "&units=metric" + "&appid=faca05867d84ee306effa2c224819d0e"
 
-        try
-        {
+        try {
             req = new Request(url)        
-        }
-        catch (error)
-        {
-            json = await req.loadJSON()
+        } catch (error) {
+            jWeather = await req.loadJSON()
 
             console.log("Error requesting data: " + url)
-            writeCache(json, "owlasterror.txt")
+            writeCache(jWeather, "owlasterror.txt")
             return
         }
 
-        json = await req.loadJSON()
+        jWeather = await req.loadJSON()
 
-        writeCache(json, "owlastupdate.txt")
+        writeCache(jWeather, "owlastupdate.txt")
+
+        url = "https://api.openweathermap.org/data/2.5/air_pollution?lat=" + loc.latitude + "&lon=" + loc.longitude + "&appid=faca05867d84ee306effa2c224819d0e"
+
+        try {
+            req = new Request(url)
+        } catch (error) {
+            jPolution = await req.loadJSON()
+
+            console.log("Error requesting data: " + url)
+            writeCache(jPolution, "oplasterror.txt")
+            return
+        }
+
+        jPolution = await req.loadJSON()
+
+        writeCache(jPolution, "oplastupdate.txt")
     }
 
-    return json
+    return {w: jWeather, p: jPolution}
 }
 
 function widgetAddText(wg, sText, iSize)
@@ -91,13 +103,12 @@ function readCache(fileName)
     const BASEPATH = fm.documentsDirectory() + "/storage"
     let docpath = BASEPATH + "/" + fileName
     
-    if(!fm.fileExists(BASEPATH) || !fm.fileExists(docpath))
-    {
+    if(!fm.fileExists(BASEPATH) || !fm.fileExists(docpath)) {
         console.log("File not found " + docpath)
-        return
+        return {error: 404}
     }
 
-    //return JSON.parse(fm.readString(docpath))
+    //return await JSON.parse(fm.readString(docpath))
     return fm.readString(docpath)
 }
 
