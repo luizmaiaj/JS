@@ -2,6 +2,8 @@
 // These must be at the very top of the file. Do not edit.
 // icon-color: deep-green; icon-glyph: leaf;
 
+const MAX = 999
+
 async function createWidget(tNow)
 {
     let wg = new ListWidget()
@@ -18,7 +20,9 @@ async function createWidget(tNow)
     sSO2 = Math.round(wd.p.list[0].components.so2.toString()).toString()
     sHum = wd.w.current.humidity.toString() + "%"
 
-    widgetAddText(wg, wd.w.timezone, 12)
+    sLocation = checkKnownLocations(wd.l, 0.3, wd.w.timezone)
+
+    widgetAddText(wg, sLocation, 12)
     widgetAddText(wg, wd.w.current.weather[0].main, 16)
     widgetAddText(wg, sTemp + " (" + sFeel + ")" + " " + sHum, 16)
     widgetAddText(wg, "uvi: " + sUVI + ", aqi: " + sAQI, 12)
@@ -51,6 +55,59 @@ async function run()
     Script.complete()   
 }
 
+function checkKnownLocations(loc, maxDist, LCurrent)
+{
+    let dToHome = getDistanceToStoredLocation(loc, "home.txt")
+    console.log("Home " + dToHome.toString())
+
+    if(dToHome < maxDist) return "Home"
+
+    let dToWork = getDistanceToStoredLocation(loc, "work.txt")
+    console.log("Work " + dToWork.toString())
+
+    if(dToWork < maxDist) return "Work"
+
+    return LCurrent
+}
+
+function getDistanceToStoredLocation(locNow, fileName)
+{
+    const fm = FileManager.iCloud()
+    let docpath = fm.documentsDirectory() + "/storage" + "/" + fileName
+
+    fm.downloadFileFromiCloud(docpath)
+    
+    let docContent = fm.readString(docpath)
+
+    if(docContent.length > 0) {
+        var aContent = docContent.split(",")
+
+        //console.log(aContent[0].toString() + ", " + aContent[1].toString() + "; " +  locNow.lat.toString() + ", " +  locNow.lon.toString())
+        return getDistance(aContent[0], aContent[1], locNow.latitude, locNow.longitude)
+    }
+
+    return MAX
+}
+
+function getDistance(lat1, lon1, lat2, lon2)
+{
+    //console.log(lat1.toString() + ", " + lon1.toString() + "; " +  lat2.toString() + ", " +  lon2.toString())
+
+    var R = 6371 // Radius of the earth in km
+    var dLat = deg2rad(lat2-lat1)  // deg2rad below
+    var dLon = deg2rad(lon2-lon1)
+    var a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * Math.sin(dLon/2) * Math.sin(dLon/2)
+    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
+    var d = R * c // Distance in km
+
+    return d
+}
+
+function deg2rad(deg)
+{
+    return deg * (Math.PI/180)
+}
+
 // Ex: api.openweathermap.org/data/2.5/weather?q=London,uk&APPID=faca05867d84ee306effa2c224819d0e
 //     api.openweathermap.org/data/2.5/air_pollution?lat={lat}&lon={lon}&appid=faca05867d84ee306effa2c224819d0e
 // AQI: Possible values: 1, 2, 3, 4, 5. Where 1 = Good, 2 = Fair, 3 = Moderate, 4 = Poor, 5 = Very Poor
@@ -66,9 +123,9 @@ async function requestData(tNow)
     console.log("minutes passed " + minPassed.toString())
 
     var oldLoc = {latitude: jWeather.lat, longitude: jWeather.lon}
+    var loc = oldLoc
 
-    if(minPassed >= 5) {
-        var loc
+    if(minPassed >= 15) {
         try { // if location request fails use the last known location
             loc = await Location.current()    
         } catch (error) {
@@ -89,7 +146,7 @@ async function requestData(tNow)
         writeCache(jPolution, "oplastupdate.txt")
     }
 
-    return {w: jWeather, p: jPolution}
+    return {w: jWeather, p: jPolution, l: loc}
 }
 
 async function sendRequest(url)
