@@ -2,6 +2,23 @@
 // These must be at the very top of the file. Do not edit.
 // icon-color: deep-blue; icon-glyph: cut;
 
+/*
+let circle = importModule('circle')
+let r = 2
+let area = circle.area(r)
+log('Area of circle: ' + area)
+
+The file imports the module circle.js which has the following contents.
+
+module.exports.area = (r) => {
+  return Math.PI * Math.pow(r, 2)
+}
+
+module.exports.circumference = (r) => {
+  return 2 * Math.PI * r
+}
+*/
+
 function checkKnownLocations(loc, maxDist, LCurrent)
 {
     let dToHome = getDistanceToStoredLocation(loc, "home.txt")
@@ -35,8 +52,8 @@ function getDistanceToStoredLocation(locNow, fileName)
     return MAX
 }
 
-function getDistance(lat1, lon1, lat2, lon2)
-{
+// uses the haversine formula to calculate a direct line distance between two coordinates
+module.exports.getDistance = (lat1, lon1, lat2, lon2) => {
     var R = 6371 // Radius of the earth in km
     var dLat = deg2rad(lat2-lat1)  // deg2rad below
     var dLon = deg2rad(lon2-lon1)
@@ -47,23 +64,32 @@ function getDistance(lat1, lon1, lat2, lon2)
     return d
 }
 
-function deg2rad(deg)
-{
-    return deg * (Math.PI/180)
-}
+function deg2rad(deg) { return deg * (Math.PI/180) }
 
 async function run()
 {
-    let LCurr = await updateCurrentLocation("curr.txt")
-    let LHome = await getLocation("home.txt")
-    let LWork = await getLocation("work.txt")
+    const fm = FileManager.iCloud()
+    var docpath = fm.bookmarkedPath("curr.txt")
+
+    let LCurr = await updateCurrentLocation(docpath)
+    //let LHome = await getLocation("home.txt")
+    //let LWork = await getLocation("work.txt")
+
+    var text = {latitude: LCurr.latitude, longitude: LCurr.longitude}
+
+    Script.setShortcutOutput(text)
+
+    if(!config.runsInApp) {
+        Script.complete()
+    }
 }
-async function updateCurrentLocation(fileName)
+
+async function updateCurrentLocation(filePath)
 {
     const LIMIT = 15 // minutes
 
     let tNow = new Date()
-    let LCurr = await getLocation(fileName)
+    let LCurr = await getLocation(filePath)
 
     var age = Math.round((tNow - LCurr.update) / 60000)
 
@@ -73,39 +99,38 @@ async function updateCurrentLocation(fileName)
         try {
             LCurr = await Location.current()
 
-            await setLocation(LCurr, fileName)
+            await setLocation(LCurr, filePath)
         } catch (error) {
-            console.log("unable to retrieve location at this time")
+            console.log(error)
         }
     }
 
     return LCurr
 }
-async function getLocation(fileName)
+
+async function getLocation(filePath)
 {
     const fm = FileManager.iCloud()
-    let docpath = fm.documentsDirectory() + "/storage" + "/" + fileName
 
-    if(!fm.fileExists(docpath)) return {latitude: 0, longitude: 0, update: 0}
+    if(!fm.fileExists(filePath)) return {latitude: 0, longitude: 0, update: 0}
 
-    fm.downloadFileFromiCloud(docpath)
+    fm.downloadFileFromiCloud(filePath)
     
-    let docContent = fm.readString(docpath)
+    let docContent = fm.readString(filePath)
 
     if(docContent.length = 0) return {latitude: 0, longitude: 0, update: 0}
     
     let aContent = docContent.split(",")
 
-    return {latitude: aContent[0], longitude: aContent[1], update: fm.modificationDate(docpath)}
+    return {latitude: aContent[0], longitude: aContent[1], update: fm.modificationDate(filePath)}
 }
 
-async function setLocation(loc, fileName) // store current location on a file named after the date
+async function setLocation(loc, filePath) // store current location on a file named after the date
 {
     const fm = FileManager.iCloud()
-    let docpath = fm.documentsDirectory() + "/storage" + "/" + fileName
     let docContent = loc.latitude + "," + loc.longitude
 
-    fm.writeString(docpath, docContent)
+    fm.writeString(filePath, docContent)
 }
 
 await run()
