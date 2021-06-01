@@ -127,9 +127,15 @@ async function requestData(tNow)
 
     if(minPassed >= 15) {
         try { // if location request fails use the last known location
-            loc = await Location.current()    
+            loc = await Location.current()
+
+            await setLocation(loc)
+
         } catch (error) {
-            console.log("using last known location")
+            console.log(error)
+
+            writeCache(error, "openweather_locerror.txt")
+
             loc = oldLoc
         }
         
@@ -157,10 +163,9 @@ async function sendRequest(url)
     try {
         req = new Request(url)        
     } catch (error) {
-        jInfo = await req.loadJSON()
+        console.log(error)
 
-        console.log("Error requesting data: " + url)
-        writeCache(jInfo, "lasterror.txt")
+        writeCache(error, "openweather_reqerror.txt")
         return
     }
 
@@ -200,6 +205,16 @@ function writeCache(wd, fileName)
     let docpath = BASEPATH + "/" + fileName
 
     fm.writeString(docpath, JSON.stringify(wd))
+}
+
+async function setLocation(loc) // store current location on a file named after the date
+{
+    const fm = FileManager.iCloud()
+    var filePath = fm.bookmarkedPath("curr.txt")
+
+    let docContent = loc.latitude + "," + loc.longitude
+
+    fm.writeString(filePath, docContent)
 }
 
 await run()

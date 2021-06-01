@@ -2,38 +2,6 @@
 // These must be at the very top of the file. Do not edit.
 // icon-color: deep-blue; icon-glyph: cut;
 
-/*
-let circle = importModule('circle')
-let r = 2
-let area = circle.area(r)
-log('Area of circle: ' + area)
-
-The file imports the module circle.js which has the following contents.
-
-module.exports.area = (r) => {
-  return Math.PI * Math.pow(r, 2)
-}
-
-module.exports.circumference = (r) => {
-  return 2 * Math.PI * r
-}
-*/
-
-function checkKnownLocations(loc, maxDist, LCurrent)
-{
-    let dToHome = getDistanceToStoredLocation(loc, "home.txt")
-    console.log("Home " + dToHome.toString())
-
-    if(dToHome < maxDist) return "Home"
-
-    let dToWork = getDistanceToStoredLocation(loc, "work.txt")
-    console.log("Work " + dToWork.toString())
-
-    if(dToWork < maxDist) return "Work"
-
-    return LCurrent
-}
-
 function getDistanceToStoredLocation(locNow, fileName)
 {
     const fm = FileManager.iCloud()
@@ -53,7 +21,8 @@ function getDistanceToStoredLocation(locNow, fileName)
 }
 
 // uses the haversine formula to calculate a direct line distance between two coordinates
-module.exports.getDistance = (lat1, lon1, lat2, lon2) => {
+function getDistance(lat1, lon1, lat2, lon2)
+{
     var R = 6371 // Radius of the earth in km
     var dLat = deg2rad(lat2-lat1)  // deg2rad below
     var dLon = deg2rad(lon2-lon1)
@@ -71,13 +40,12 @@ async function run()
     const fm = FileManager.iCloud()
     var docpath = fm.bookmarkedPath("curr.txt")
 
-    let LCurr = await updateCurrentLocation(docpath)
-    //let LHome = await getLocation("home.txt")
-    //let LWork = await getLocation("work.txt")
+    let loc = await updateCurrentLocation(docpath)
 
-    var text = {latitude: LCurr.latitude, longitude: LCurr.longitude}
+    let dToHome = getDistanceToStoredLocation(loc, "home.txt")
+    console.log("Home " + dToHome.toString())
 
-    Script.setShortcutOutput(text)
+    Script.setShortcutOutput(dToHome)
 
     if(!config.runsInApp) {
         Script.complete()
