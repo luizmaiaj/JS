@@ -34,7 +34,7 @@ async function createWidget(tNow)
     let df = new DateFormatter()
     df.dateFormat = "HH:mm:ss"
 
-    const tDate = wg.addText(df.string(tNow))
+    const tDate = wg.addText(df.string(tNow) + " - " + wd.m + " mins")
     tDate.font = Font.lightRoundedSystemFont(10)
 
     return wg
@@ -152,7 +152,7 @@ async function requestData(tNow)
         writeCache(jPolution, "oplastupdate.txt")
     }
 
-    return {w: jWeather, p: jPolution, l: loc}
+    return {w: jWeather, p: jPolution, l: loc, m: minPassed}
 }
 
 async function sendRequest(url)
