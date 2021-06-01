@@ -212,6 +212,8 @@ async function setLocation(loc) // store current location on a file named after 
     const fm = FileManager.iCloud()
     var filePath = fm.bookmarkedPath("curr.txt")
 
+    console.log("location updated: " + filePath)
+
     let docContent = loc.latitude + "," + loc.longitude
 
     fm.writeString(filePath, docContent)
