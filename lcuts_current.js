@@ -5,11 +5,12 @@
 async function run()
 {
     const fm = FileManager.iCloud()
-    var docpath = fm.bookmarkedPath("curr.txt")
+    let filePath = fm.documentsDirectory() + "/storage" + "/" + "curr.txt"
+    fm.downloadFileFromiCloud(filePath)
 
-    let LCurr = await updateCurrentLocation(docpath)
+    let loc = await updateCurrentLocation(filePath)
 
-    var text = {latitude: LCurr.latitude, longitude: LCurr.longitude}
+    var text = {latitude: loc.latitude, longitude: loc.longitude}
 
     Script.setShortcutOutput(text)
 

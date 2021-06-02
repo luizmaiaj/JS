@@ -38,9 +38,10 @@ function deg2rad(deg) { return deg * (Math.PI/180) }
 async function run()
 {
     const fm = FileManager.iCloud()
-    var docpath = fm.bookmarkedPath("curr.txt")
+    let filePath = fm.documentsDirectory() + "/storage" + "/" + "curr.txt"
+    fm.downloadFileFromiCloud(filePath)
 
-    let loc = await updateCurrentLocation(docpath)
+    let loc = await updateCurrentLocation(filePath)
 
     let dToHome = getDistanceToStoredLocation(loc, "home.txt")
     console.log("Home " + dToHome.toString())

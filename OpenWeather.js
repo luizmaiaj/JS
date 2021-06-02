@@ -125,20 +125,20 @@ async function requestData(tNow)
     var oldLoc = {latitude: jWeather.lat, longitude: jWeather.lon}
     var loc = oldLoc
 
-    if(minPassed >= 15) {
-        try { // if location request fails use the last known location
-            loc = await Location.current()
+    try { // if location request fails use the last known location
+        loc = await Location.current()
 
-            await setLocation(loc)
+        await setLocation(loc)
 
-        } catch (error) {
-            console.log(error)
+    } catch (error) {
+        console.log(error)
 
-            writeCache(error, "openweather_locerror.txt")
+        writeCache(error, "openweather_locerror.txt")
 
-            loc = oldLoc
-        }
-        
+        loc = oldLoc
+    }
+
+    if(minPassed >= 15) {        
         let url = "https://api.openweathermap.org/data/2.5/onecall?lat=" + loc.latitude + "&lon=" + loc.longitude + "&exclude=minutely,hourly,daily" + "&units=metric" + "&appid=faca05867d84ee306effa2c224819d0e"
 
         jWeather = await sendRequest(url)
@@ -210,7 +210,8 @@ function writeCache(wd, fileName)
 async function setLocation(loc) // store current location on a file named after the date
 {
     const fm = FileManager.iCloud()
-    var filePath = fm.bookmarkedPath("curr.txt")
+    let filePath = fm.documentsDirectory() + "/storage" + "/" + "curr.txt"
+    fm.downloadFileFromiCloud(filePath)
 
     console.log("location updated: " + filePath)
 
