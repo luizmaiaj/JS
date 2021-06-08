@@ -34,7 +34,7 @@ async function run()
     Script.setWidget(widget)
     
     // finish execution and display preview
-    if (config.runsInApp) widget.presentSmall()
+    if (config.runsInApp) widget.presentLarge()
     
     Script.complete()   
 }

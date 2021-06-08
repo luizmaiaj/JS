@@ -23,7 +23,7 @@
  - SHOW_POST_IMAGES: true = display images next to the post headlines; set to false if you don't want images next to posts
  - Note: combining SHOW_POST_IMAGES = true + small widget will ignore BG_GRADIENT_COLOR values in small config widgets
  */
-var SITE_URL = "https://9to5google.com";
+var SITE_URL = "http://www.techmeme.com/feed.xml";
 var SITE_NAME = "9to5google";
 var BG_IMAGE_NAME = "none";
 var BG_IMAGE_BLUR = "true";
