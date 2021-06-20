@@ -6,16 +6,21 @@ async function createWidget(tNow)
 {
     let widget = new ListWidget()
 
-    var loc = await Location.current()
-    var tile = await requestTile(loc)
+    //var loc = await Location.current()
+    var loc = {latitude: 48.2297000, longitude: -69.8006100}
+    var tile = await requestTile(loc, 4)
+
+    const fm = FileManager.iCloud()
+    let filePath = fm.documentsDirectory() + "/storage" + "/" + "tile.png"
+    fm.writeImage(filePath, tile)
 
     var wImage = widget.addImage(tile)
 
-    sImage = new Size(128, 128)
+    sImage = new Size(256, 256)
 
     wImage.imageSize = sImage
 
-    let df = new DateFormatter()
+    let df = new DateFormatter(sImage)
     df.dateFormat = "HH:mm:ss"
 
     const wtDate = widget.addText(df.string(tNow))
@@ -48,7 +53,7 @@ function getXY(lat, lon, zoom)
 
 function lon2tile(lon, zoom)
 {
-    return (Math.floor((lon+180)/360*Math.pow(2,zoom)));
+    return (Math.floor((lon+180)/360*Math.pow(2, zoom)));
 }
 
 function lat2tile(lat, zoom)
@@ -56,9 +61,8 @@ function lat2tile(lat, zoom)
     return (Math.floor((1-Math.log(Math.tan(lat*Math.PI/180) + 1/Math.cos(lat*Math.PI/180))/Math.PI)/2 *Math.pow(2,zoom)));
 }
 
-async function requestTile(loc)
+async function requestTile(loc, zoom)
 {
-    var zoom = 4
     var tile = getXY(loc.latitude, loc.longitude, zoom)
     console.log("x: " + tile.x + " y: " + tile.y)
 
@@ -67,18 +71,18 @@ async function requestTile(loc)
     var jImage
     var req
 
-    try {
-        req = new Request(url)
+    req = new Request(url)
 
-        req.headers = { "x-rapidapi-key": "16e2c1a827msh446d04107881719p157391jsn1e65b9bed8af",
-        "x-rapidapi-host": "maptiles.p.rapidapi.com"}
+    req.headers = { "x-rapidapi-key": "16e2c1a827msh446d04107881719p157391jsn1e65b9bed8af",
+    "x-rapidapi-host": "maptiles.p.rapidapi.com"}
+
+    try {
+        jImage = await req.loadImage()
 
     } catch (error) {
         console.log(error)
         return
     }
-
-    jImage = await req.loadImage()
 
     return jImage
 }
