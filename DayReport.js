@@ -6,17 +6,19 @@ async function createWidget()
 {
     let gDate = new Date()
 
+    let loc
+
     try { 
         loc = await Location.current()
+
+        storeLocation(gDate, loc)
 
     } catch (error) {
         console.log(error)
 
         writeCache(error, "dayreport_locerror.txt")
     }
-
-    storeLocation(gDate, loc)
-    
+   
     let widget = new ListWidget()
 
     let dev = Device.isFaceUp()
@@ -71,7 +73,7 @@ async function storeLocation(tNow, locNow) // store current location on a file n
     let df = new DateFormatter()
     let fm = FileManager.iCloud()
     df.dateFormat = "yyyyMMdd"
-    let docpath = fm.documentsDirectory() + "/storage/locationhistory_" + df.string(tNow) + ".txt"
+    let docpath = fm.documentsDirectory() + "/storage/locationhistory_" + df.string(tNow) + ".csv"
     var docContent
     if(fm.fileExists(docpath))
     {
@@ -82,7 +84,7 @@ async function storeLocation(tNow, locNow) // store current location on a file n
     {
         docContent = "date,latitude,longitude"
     }
-    df.dateFormat = "yyyy/MM/dd, HH:mm:ss"
+    df.dateFormat = "yyyy/MM/dd HH:mm:ss"
     docContent = docContent + "\n" + df.string(tNow) + "," + locNow.latitude + "," + locNow.longitude
     fm.writeString(docpath, docContent)
 }
